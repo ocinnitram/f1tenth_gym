@@ -470,7 +470,7 @@ Test cases:
 class ScanTests(unittest.TestCase):
     def setUp(self):
         # test params
-        self.num_beams = 1080
+        self.num_beams = 811
         self.fov = 4.7
 
         self.num_test = 10
@@ -552,7 +552,7 @@ class ScanTests(unittest.TestCase):
         self.assertGreater(fps, 500.)
 
     def test_rng(self):
-        num_beams = 1080
+        num_beams = 811
         fov = 4.7
         map_path = '../envs/maps/berlin.yaml'
         map_ext = '.png'
@@ -581,7 +581,7 @@ class ScanTests(unittest.TestCase):
 
 
 def main():
-    num_beams = 1080
+    num_beams = 811
     fov = 4.7
     # map_path = '../envs/maps/berlin.yaml'
     map_path = '../../../examples/example_map.yaml'
@@ -639,7 +639,7 @@ if __name__ == '__main__':
     # dist = get_range(pose, beam_theta, pt_a, pt_b)
     # print(dist, time.time()-start)
 
-    # num_beams = 1080
+    # num_beams = 811
     # scan = 100.*np.ones((num_beams, ))
     # scan_angles = np.linspace(-2.35, 2.35, num=num_beams)
     # assert scan.shape[0] == scan_angles.shape[0]

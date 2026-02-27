@@ -66,7 +66,7 @@ class RaceCar(object):
     scan_angles = None
     side_distances = None
 
-    def __init__(self, params, seed, is_ego=False, time_step=0.01, num_beams=1080, fov=4.7, integrator=Integrator.Euler, lidar_dist=0.0):
+    def __init__(self, params, seed, is_ego=False, time_step=0.01, num_beams=811, fov=4.7, integrator=Integrator.Euler, lidar_dist=0.0):
         """
         Init function
 
@@ -74,7 +74,7 @@ class RaceCar(object):
             params (dict): vehicle parameter dictionary, includes {'mu', 'C_Sf', 'C_Sr', 'lf', 'lr', 'h', 'm', 'I', 's_min', 's_max', 'sv_min', 'sv_max', 'v_switch', 'a_max': 9.51, 'v_min', 'v_max', 'length', 'width'}
             is_ego (bool, default=False): ego identifier
             time_step (float, default=0.01): physics sim time step
-            num_beams (int, default=1080): number of beams in the laser scan
+            num_beams (int, default=811): number of beams in the laser scan
             fov (float, default=4.7): field of view of the laser
             lidar_dist (float, default=0): vertical distance between LiDAR and backshaft
 
@@ -91,8 +91,8 @@ class RaceCar(object):
         self.fov = fov
         self.integrator = integrator
         self.lidar_dist = lidar_dist
-        if self.integrator is Integrator.RK4:
-            warnings.warn(f"Chosen integrator is RK4. This is different from previous versions of the gym.")
+        # if self.integrator is Integrator.RK4:
+        #     warnings.warn(f"Chosen integrator is RK4. This is different from previous versions of the gym.")
 
         # state is [x, y, steer_angle, vel, yaw_angle, yaw_rate, slip_angle]
         self.state = np.zeros((7, ))
@@ -106,7 +106,11 @@ class RaceCar(object):
 
         # steering delay buffer
         self.steer_buffer = np.empty((0, ))
-        self.steer_buffer_size = 2
+
+        # MODIFIED BUFFER
+        target_latency = 0.02
+        self.steer_buffer_size = 1 #int(np.ceil(target_latency / self.time_step))
+        print('Buffer size:', self.steer_buffer_size)
 
         # collision identifier
         self.in_collision = False
@@ -148,7 +152,11 @@ class RaceCar(object):
                 else:
                     if angle > -np.pi/2:
                         # between 0 and -pi/2
-                        to_side = dist_sides / np.sin(-angle)
+                        sin_val = np.sin(-angle)
+                        if abs(sin_val) > 1e-10:
+                            to_side = dist_sides / sin_val
+                        else:
+                            to_side = np.inf
                         to_fr = dist_fr / np.cos(-angle)
                         RaceCar.side_distances[i] = min(to_side, to_fr)
                     else:
@@ -277,7 +285,7 @@ class RaceCar(object):
             self.steer_buffer = self.steer_buffer[:-1]
             self.steer_buffer = np.append(raw_steer, self.steer_buffer)
 
-
+        
         # steering angle velocity input to steering velocity acceleration input
         accl, sv = pid(vel, steer, self.state[3], self.state[2], self.params['sv_max'], self.params['a_max'], self.params['v_max'], self.params['v_min'])
         
@@ -595,6 +603,7 @@ class Simulator(object):
             'scans': [],
             'poses_x': [],
             'poses_y': [],
+            'steering_angle': [],
             'poses_theta': [],
             'linear_vels_x': [],
             'linear_vels_y': [],
@@ -604,6 +613,7 @@ class Simulator(object):
             observations['scans'].append(agent_scans[i])
             observations['poses_x'].append(agent.state[0])
             observations['poses_y'].append(agent.state[1])
+            observations['steering_angle'].append(agent.state[2])
             observations['poses_theta'].append(agent.state[4])
             observations['linear_vels_x'].append(agent.state[3])
             observations['linear_vels_y'].append(0.)

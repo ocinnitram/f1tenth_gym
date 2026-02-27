@@ -43,9 +43,9 @@ from f110_gym.envs.collision_models import get_vertices
 ZOOM_IN_FACTOR = 1.2
 ZOOM_OUT_FACTOR = 1/ZOOM_IN_FACTOR
 
-# vehicle shape constants
-CAR_LENGTH = 0.58
-CAR_WIDTH = 0.31
+# VEHICLE HARDCODED VALUES (WTF??)
+CAR_LENGTH = 0.5
+CAR_WIDTH = 0.29
 
 class EnvRenderer(pyglet.window.Window):
     """
