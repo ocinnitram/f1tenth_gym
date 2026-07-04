@@ -149,8 +149,16 @@ class EnvRenderer(pyglet.window.Window):
         map_mask = map_img == 0.0
         map_mask_flat = map_mask.flatten()
         map_points = 50. * map_coords[:, map_mask_flat].T
-        for i in range(map_points.shape[0]):
-            self.batch.add(1, GL_POINTS, None, ('v3f/stream', [map_points[i, 0], map_points[i, 1], map_points[i, 2]]), ('c3B/stream', [183, 193, 222]))
+        # Drop the previous map's point cloud first — sequential eval layouts
+        # reuse one renderer window, and batch vertex lists are never garbage
+        # collected, so without this old obstacles stay painted over new maps.
+        if getattr(self, '_map_vlist', None) is not None:
+            self._map_vlist.delete()
+        n_pts = map_points.shape[0]
+        self._map_vlist = self.batch.add(
+            n_pts, GL_POINTS, None,
+            ('v3f/stream', map_points.flatten().tolist()),
+            ('c3B/stream', [183, 193, 222] * n_pts))
         self.map_points = map_points
 
     def on_resize(self, width, height):
